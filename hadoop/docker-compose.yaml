@@ -12,8 +12,11 @@ services:
           ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
    datanode:
       image: eecs4415/hadoop
-      deploy:
-        replicas: 2
+      command: ["hdfs", "datanode"]
+      env_file:
+        - ./config
+   datanode2:
+      image: eecs4415/hadoop
       command: ["hdfs", "datanode"]
       env_file:
         - ./config
