@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  web:
+    image: "web"
+    container_name: flask
+    build: ./web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - "db"
+    environment:
+      - KEY=1234567890
+  db:
+    image: "redis:alpine"
+    container_name: redis
