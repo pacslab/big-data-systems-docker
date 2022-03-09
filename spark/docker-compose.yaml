@@ -1,0 +1,69 @@
+# This docker-compose file defines a multi-container application composed of:
+# 1. two Spark 3.2.1 containers working as a Spark cluster with a web panel listening on port 8080
+# 2. a data-source container that generates a stream of random integers
+# 3. a jupyterlab container running a Jupyter Lab service on port 8888
+# 4. a webapp container running a Flask web application for visualization on port 5000
+# 5. a redis container for data storage
+
+# Made for: EECS 4415 - Big Data Systems (Department of Electrical Engineering and Computer Science, York University)
+# Author: Changyuan Lin
+
+
+version: '2'
+
+services:
+  spark:
+    image: eecs4415/spark
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - '8080:8080'
+      - '4040:4040'
+      - '4041:4041'
+    volumes:
+      - ./app:/app
+  spark-worker:
+    image: eecs4415/spark
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - '28081:8081'
+      - '24040:4040'
+      - '24041:4041'
+    volumes:
+      - ./app:/app
+  data-source:
+    image: eecs4415/python
+    environment:
+      - TOKEN=dummyvalue
+    volumes:
+      - ./app:/app
+    command: python3.9 -u /app/nine-multiples/data_source.py
+  jupyterlab:
+    image: eecs4415/spark
+    volumes:
+      - ./app:/app
+      - ./jupyter:/etc/jupyter
+    ports:
+      - '8888:8888'
+    command: /etc/jupyter/run.sh
+  webapp:
+    image: eecs4415/python
+    volumes:
+      - ./app:/app
+    ports:
+      - '5000:5000'
+    command: /app/nine-multiples/run-flask.sh
+  redis:
+    image: redis
